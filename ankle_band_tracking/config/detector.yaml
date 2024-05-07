@@ -1,0 +1,14 @@
+detector:
+  ros__parameters:
+    yolo_model: 
+      weight_file: "/home/nvidia/tracking_ros2_ws/src/ankle_band_tracking/config/weights/ankle_band_detection.pt"
+      class_file: "/home/nvidia/tracking_ros2_ws/src/ankle_band_tracking/config/classes.txt"
+      conf_thresh: 0.5
+      iou_thresh: 0.45
+      device: ""
+      img_size: 640
+      trace: False
+    rgb_img_sub_topic: "/camera/camera/color/image_raw"
+    depth_img_sub_topic: "/camera/camera/aligned_depth_to_color/image_raw"
+    img_pub_topic: "/yolo_detection/detector/image"
+    bboxes_pub_topic: "/yolo_detection/detector/bboxes"

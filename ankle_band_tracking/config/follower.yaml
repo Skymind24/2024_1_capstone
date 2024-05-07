@@ -1,0 +1,6 @@
+follower:
+  ros__parameters:
+    camera_fov: 55.79
+    img_size: 640
+    bboxes_sub_topic: "/yolo_detection/detector/bboxes"
+    cmd_vel_pub_topic: "/follower/cmd_vel"
