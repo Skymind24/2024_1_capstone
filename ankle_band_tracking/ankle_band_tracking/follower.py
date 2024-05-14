@@ -6,6 +6,7 @@ from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor
 
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Float32
 from ankle_band_tracking_interfaces.msg import BoundingBoxArray
 
 
@@ -18,7 +19,7 @@ class Follower(Node):
         self.declare_parameter("camera_fov", '', ParameterDescriptor(description="Realsense Field of View"))
         self.declare_parameter("img_size", 640, ParameterDescriptor(description="Image size"))
         self.declare_parameter('bboxes_sub_topic', "/yolo_detection/detector/bboxes", ParameterDescriptor(description="Bbox array subscribed"))
-        self.declare_parameter('cmd_vel_pub_topic', "/follower/target_angle", ParameterDescriptor(description="Cmd Vel to publish"))
+        self.declare_parameter('cmd_vel_pub_topic', "/follower/cmd_vel", ParameterDescriptor(description="Cmd Vel to publish"))
         
         # Get params
         self.camera_fov = self.get_parameter(name="camera_fov").get_parameter_value().double_value
@@ -26,7 +27,7 @@ class Follower(Node):
 
         ros_params = {
             "bboxes_sub_topic": self.get_parameter(name="bboxes_sub_topic").get_parameter_value().string_value,
-            "cmd_vel_pub_topic": self.get_parameter(name="cmd_vel_pub_topic").get_parameter_value().string_value
+            "cmd_vel_pub_topic": self.get_parameter(name="cmd_vel_pub_topic").get_parameter_value().string_value,
         }
 
         if not self.camera_fov and not ros_params["bboxes_sub_topic"]:
@@ -39,53 +40,52 @@ class Follower(Node):
 
         # Initialize publishers
         self.cmd_vel_pub = self.create_publisher(Twist, ros_params["cmd_vel_pub_topic"], 10)
-
+        self.vcmd = 0.0
+        self.wcmd = 0.0
+        self.count = 0
         self.get_logger().info("Follower Node has been started.")
 
 
     def bboxes_callback(self, msg):
         if msg:
             target_detected = False
-            min_distance = 0.5
-            min_angular_velocity = -0.5  # Minimum angular speed
-            max_angular_velocity = 0.5  # Maximum angular speed
-            min_linear_velocity = 0.0  # Minimum linear speed
-            max_linear_velocity = 1.0  # Maximum linear speed
+            min_distance = 0.3
 
             for bbox in msg.bounding_boxes:
                 if bbox.class_name == "target" and bbox.conf >= 0.5:
+                    # Calculate an angle between the target and the camera
+                    angle = self.calculate_angle_to_person_from_box_position(bbox.center_x)
                     target_detected = True
 
-                    if bbox.distance < min_distance:
-                        cmd = Twist()
-                        cmd.linear.x = 0.0
-                        cmd.angular.z = 0.0
+                    cmd = Twist()
+                    L_d = 1.0
+                    self.wcmd = math.atan(2*math.sin(angle)/(L_d))
+                    cmd.angular.z = self.wcmd
+
+
+                    if bbox.distance < min_distance:                   
+                        self.vcmd = 0.0                       
+                        cmd.linear.x = self.vcmd                        
                         self.cmd_vel_pub.publish(cmd)
                     else:
-                        cmd = Twist()
-                        # Calculate an angle between the target and the camera
-                        angle_rad = self.calculate_angle_to_person_from_box_position(bbox.center_x)
+                        if bbox.distance > 0.5:
+                            self.vcmd = 0.52
+                        else:
+                            self.vcmd = bbox.distance
 
-                        # Consider max velocity
-                        target_linear_velocity = min(bbox.distance, max_linear_velocity)
-                        target_angular_velocity = min(angle_rad, max_angular_velocity)
-
-                        # Calculate linear.x and angular.z
-                        linear_velocity_x = target_linear_velocity * math.cos(angle_rad)
-                        angular_velocity_z = target_angular_velocity
-
-                        # Safety bounds
-                        cmd.linear.x = max(min_linear_velocity, min(max_linear_velocity, linear_velocity_x))
-                        cmd.angular.z = max(min_angular_velocity, min(max_angular_velocity, angular_velocity_z))
-
+                        cmd.linear.x = self.vcmd
                         self.cmd_vel_pub.publish(cmd)
 
             if not target_detected:
                 cmd = Twist()
-                cmd.linear.x = 0.0
-                cmd.angular.z = 0.0
-                self.cmd_vel_pub.publish(cmd)
-            
+                self.count += 1
+                if self.count >= 20 :
+                    self.vcmd = 0.0
+                    self.wcmd = 0.0
+                    cmd.linear.x = self.vcmd
+                    cmd.angular.z = self.wcmd
+                    self.cmd_vel_pub.publish(cmd)
+
      
     def calculate_angle_to_person_from_box_position(self, center_x):
         pixel_per_angle = self.img_size / self.camera_fov

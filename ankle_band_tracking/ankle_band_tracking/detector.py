@@ -77,10 +77,6 @@ class Detector(Node):
         # Flags
         self.camera_RGB = False
         self.camera_depth = False
-
-        # Timer callback
-        self.frequency = 20  # Hz
-        self.timer = self.create_timer(1/self.frequency, self.timer_callback)
     
         # Initialize yolov7
         set_logging()
@@ -117,6 +113,8 @@ class Detector(Node):
             self.rgb_image = self.cv_bridge.imgmsg_to_cv2(msg) # (480, 640, 3)
             self.camera_RGB = True
 
+            self.yolov7_detection()
+
     def depth_img_callback(self, msg):
         """Subscription to the depth camera topic."""
         if msg:
@@ -142,13 +140,10 @@ class Detector(Node):
             self.intr.model = rs.distortion.kannala_brandt4
         self.intr.coeffs = [i for i in cameraInfo.d]
 
-    def timer_callback(self):
-        if self.camera_RGB == True:
-            self.yolov7_detection()
-
 
     def yolov7_detection(self):
         """ Perform object detection with custom yolov7-tiny"""
+        
         img = self.rgb_image
 
         im0 = img.copy()

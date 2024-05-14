@@ -40,18 +40,17 @@ def generate_launch_description():
         executable='follower',
         remappings=[
             ('/yolo_detection/detector/bboxes', 'yolo_detection/detector/bboxes'),
-            ('/follower/cmd_vel', 'follower/cmd_vel'),
         ],
         output='screen',
         parameters=[follow_param_file]
     )
 
     ### ExecuteProcess ###
-    rqt = ExecuteProcess(
-        cmd=["rqt"], 
-        output="screen",
-        shell=True
-    )
+    # rqt = ExecuteProcess(
+    #     cmd=["rqt"], 
+    #     output="screen",
+    #     shell=True
+    # )
 
 
     ### Event Handlers ###
@@ -62,7 +61,7 @@ def generate_launch_description():
         realsense,
         detector_node,
         follower_node,
-        rqt,
+        #rqt,
         RegisterEventHandler(
             OnShutdown(
                 on_shutdown=[LogInfo(

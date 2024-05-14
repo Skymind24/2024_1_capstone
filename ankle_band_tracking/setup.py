@@ -26,7 +26,7 @@ setup(
         'console_scripts': [
             'detector = ankle_band_tracking.detector:main',
             'follower = ankle_band_tracking.follower:main',
-            #'ugv_controller = ankle_band_tracking.ugv_controller:main',
+            'image_to_video_converter = ankle_band_tracking.image_to_video_converter:main',
         ],
     },
 )
