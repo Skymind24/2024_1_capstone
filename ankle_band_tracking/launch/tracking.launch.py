@@ -31,6 +31,10 @@ def generate_launch_description():
     detector_node = Node(
         package=package_name,
         executable='detector',
+        # remappings=[
+        #     ('/camera/camera/color/image_raw', 'camera/camera/color/image_raw'),
+        #     ('/camera/camera/aligned_depth_to_color/image_raw', 'camera/camera/aligned_depth_to_color/image_raw'),
+        # ],
         output='screen',
         parameters=[yolo_param_file]
     )

@@ -1,5 +1,6 @@
 #!/home/nvidia/env/bin/python
 import cv2
+import math
 import torch
 import numpy as np
 
@@ -105,15 +106,38 @@ class Detector(Node):
         # ROS attributes
         self.cv_bridge = CvBridge()
 
+        # Metric Calculation
+        self.last_stamp = None
+        self.fps = 0.0
+        self.inference_time = 0.0
+
+        self.num_frames = 0
+        self.num_true = 0
+        self.num_false = 0
+        self.num_over_conf = 0
+
         self.get_logger().info("Detector Node has been started.")
 
     
     def rgb_img_callback(self, msg):
         if msg:
-            self.rgb_image = self.cv_bridge.imgmsg_to_cv2(msg) # (480, 640, 3)
-            self.camera_RGB = True
+            if self.intr is None and self.depth is None:
+                pass
+            else:
+                curr_stamp = msg.header.stamp
+                if self.last_stamp is not None:
+                    time_diff = (curr_stamp.nanosec - self.last_stamp) * 1e-9
+                    if time_diff > 0:
+                        self.fps = 1.0 / time_diff
+                self.last_stamp = curr_stamp.nanosec
+                self.get_logger().info(f'FPS: {self.fps:.2f}')
 
-            self.yolov7_detection()
+                self.num_frames += 1
+
+                self.rgb_image = self.cv_bridge.imgmsg_to_cv2(msg) # (480, 640, 3)
+                self.camera_RGB = True
+
+                self.yolov7_detection()
 
     def depth_img_callback(self, msg):
         """Subscription to the depth camera topic."""
@@ -125,20 +149,23 @@ class Detector(Node):
 
     def intr_callback(self, cameraInfo):
         """Camera information obtained from the aligned_depth_to_color/camera_info topic"""
-        if self.intr:
-            return
-        self.intr = rs.intrinsics()
-        self.intr.width = cameraInfo.width
-        self.intr.height = cameraInfo.height
-        self.intr.ppx = cameraInfo.k[2]
-        self.intr.ppy = cameraInfo.k[5]
-        self.intr.fx = cameraInfo.k[0]
-        self.intr.fy = cameraInfo.k[4]
-        if cameraInfo.distortion_model == 'plumb_bob':
-            self.intr.model = rs.distortion.brown_conrady
-        elif cameraInfo.distortion_model == 'equidistant':
-            self.intr.model = rs.distortion.kannala_brandt4
-        self.intr.coeffs = [i for i in cameraInfo.d]
+        if cameraInfo:
+            if self.intr:
+                return
+            self.intr = rs.intrinsics()
+            self.intr.width = cameraInfo.width
+            self.intr.height = cameraInfo.height
+            self.intr.ppx = cameraInfo.k[2]
+            self.intr.ppy = cameraInfo.k[5]
+            self.intr.fx = cameraInfo.k[0]
+            self.intr.fy = cameraInfo.k[4]
+            if cameraInfo.distortion_model == 'plumb_bob':
+                self.intr.model = rs.distortion.brown_conrady
+            elif cameraInfo.distortion_model == 'equidistant':
+                self.intr.model = rs.distortion.kannala_brandt4
+            self.intr.coeffs = [i for i in cameraInfo.d]
+        else:
+            self.get_logger().info("Don't subscribe the depth camera info.")
 
 
     def yolov7_detection(self):
@@ -171,6 +198,8 @@ class Detector(Node):
         with torch.no_grad():   # Calculating gradients would cause a GPU memory leak
             pred = self.model(img)[0]
         t2 = time_synchronized()
+
+        self.get_logger().info(f'{(1E3 * (t2 - t1)):.1f}ms) Inference')
 
         # Apply NMS
         pred = non_max_suppression(pred, self.conf_thresh, self.iou_thresh)
@@ -214,12 +243,18 @@ class Detector(Node):
                 # draw bbox and center
                 label = f'{self.names[c]} {conf:.2f}'
                 plot_one_box(xyxy, im0, label=label, color=self.colors[int(cls)], line_thickness=2)
+
+                self.num_true += 1
+                if bbox.conf > 0.5:
+                    self.num_over_conf += 1
             
         # Publish
         self.img_pub.publish(self.cv_bridge.cv2_to_imgmsg(im0, "bgr8"))
         self.bboxes_pub.publish(bboxes_array)     
 
         im0_cv2 = cv2.cvtColor(im0,cv2.COLOR_BGR2RGB)
+        fps = f'FPS: {self.fps:.2f}'
+        cv2.putText(im0_cv2, fps, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
         cv2.imshow("YOLOv7-tiny-detection", im0_cv2)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
@@ -236,6 +271,17 @@ def main(args=None):
             pass
         detection_node.destroy_node()
         rclpy.shutdown()
+    
+    # map calculation
+    precision = detection_node.num_true / detection_node.num_frames
+    if detection_node.num_true == 0:
+        epsilon = math.exp(-6)
+        recall = detection_node.num_over_conf / (detection_node.num_true + epsilon)
+    else:
+        recall = detection_node.num_over_conf / detection_node.num_true
+
+    ap = precision * recall
+    print(ap)
 
 if __name__ == '__main__':
     main()
