@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ankle_band_tracking_interfaces)
+project(car_tracking_interfaces)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)

@@ -1,8 +1,8 @@
 detector:
   ros__parameters:
     yolo_model: 
-      weight_file: "/home/nvidia/tracking_ros2_ws/src/ankle_band_tracking/config/weights/best_car.pt"
-      class_file: "/home/nvidia/tracking_ros2_ws/src/ankle_band_tracking/config/classes.txt"
+      weight_file: "/home/nvidia/tracking_ros2_ws/src/car_tracking/config/weights/best_car.pt"
+      class_file: "/home/nvidia/tracking_ros2_ws/src/car_tracking/config/classes.txt"
       conf_thresh: 0.5
       iou_thresh: 0.45
       device: ""

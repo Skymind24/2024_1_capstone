@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import setup, find_packages
 
-package_name = 'ankle_band_tracking'
+package_name = 'car_tracking'
 
 setup(
     name=package_name,
@@ -24,9 +24,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'detector = ankle_band_tracking.detector:main',
-            'follower = ankle_band_tracking.follower:main',
-            'image_to_video_converter = ankle_band_tracking.image_to_video_converter:main',
+            'detector = car_tracking.detector:main',
+            'follower = car_tracking.follower:main',
+            'image_to_video_converter = car_tracking.image_to_video_converter:main',
         ],
     },
 )

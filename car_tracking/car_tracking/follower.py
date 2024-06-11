@@ -7,7 +7,7 @@ from rcl_interfaces.msg import ParameterDescriptor
 
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32
-from ankle_band_tracking_interfaces.msg import BoundingBoxArray
+from car_tracking_interfaces.msg import BoundingBoxArray
 
 
 class Follower(Node):
@@ -49,16 +49,17 @@ class Follower(Node):
     def bboxes_callback(self, msg):
         if msg:
             target_detected = False
-            min_distance = 0.3
+            min_distance = 0.2
 
             for bbox in msg.bounding_boxes:
-                if bbox.class_name == "target" and bbox.conf >= 0.5:
+                if bbox.class_name == "car" and bbox.conf >= 0.5:
                     # Calculate an angle between the target and the camera
                     angle = self.calculate_angle_to_person_from_box_position(bbox.center_x)
                     target_detected = True
 
                     cmd = Twist()
-                    L_d = 1.0
+                    #L_d = 1.0
+                    L_d = 1.5 # 1.5 
                     self.wcmd = math.atan(2*math.sin(angle)/(L_d))
                     cmd.angular.z = self.wcmd
 
@@ -70,21 +71,24 @@ class Follower(Node):
                     else:
                         if bbox.distance > 0.5:
                             self.vcmd = 0.52
+                            cmd.linear.x = self.vcmd
+                            self.cmd_vel_pub.publish(cmd)
                         else:
                             self.vcmd = bbox.distance
+                            cmd.linear.x = self.vcmd
+                            self.cmd_vel_pub.publish(cmd)
 
-                        cmd.linear.x = self.vcmd
-                        self.cmd_vel_pub.publish(cmd)
+                        
 
             if not target_detected:
                 cmd = Twist()
                 self.count += 1
-                if self.count >= 20 :
+                if self.count >= 3:
                     self.vcmd = 0.0
                     self.wcmd = 0.0
-                    cmd.linear.x = self.vcmd
-                    cmd.angular.z = self.wcmd
-                    self.cmd_vel_pub.publish(cmd)
+                cmd.linear.x = self.vcmd
+                cmd.angular.z = self.wcmd
+                self.cmd_vel_pub.publish(cmd)
 
      
     def calculate_angle_to_person_from_box_position(self, center_x):

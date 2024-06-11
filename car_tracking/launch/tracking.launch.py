@@ -12,7 +12,7 @@ from launch.substitutions import LocalSubstitution
 
 def generate_launch_description():
 
-    package_name='ankle_band_tracking'
+    package_name='car_tracking'
 
     ankle_band_tracking_share_dir = get_package_share_directory(package_name)
     yolo_param_file = os.path.join(ankle_band_tracking_share_dir, 'config', 'detector.yaml')
