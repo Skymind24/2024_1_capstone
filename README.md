@@ -8,3 +8,16 @@ The study focuses on developing a cluster tracking robot for logistics purposes,
 
 ## :pushpin: ROS System Graph
 <p align="center"><img src="https://github.com/Skymind24/2024_1_capstone/assets/114856550/1844a82e-3a2d-4246-8ae3-36888a32bb24" width="80%" height="80%"></p>
+
+<br/>
+
+## :pushpin: Team
+<div align="center">
+
+| [<img src="https://github.com/Skymind24.png" height=150 width=150>](https://github.com/Skymind24) |  |
+| :------: |  :------: |
+| [@Skymind24](https://github.com/Skymind24) |  |
+
+</div>
+
+<br>
