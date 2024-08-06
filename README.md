@@ -6,6 +6,10 @@ The study focuses on developing a cluster tracking robot for logistics purposes,
 
 <br/>
 
+## :pushpin: Demo Video
+<p align="center"><img src="https://github.com/user-attachments/assets/b97db525-fa27-4d7d-b03d-53f2fa02e47b"></p>
+<br/>
+
 ## :pushpin: Robot System Diagram
 <p align="center"><img src="https://github.com/Skymind24/2024_1_capstone/assets/114856550/098786da-5ff8-4ebd-9dc6-c6a53a180c7e" width="80%" height="80%"></p>
 
