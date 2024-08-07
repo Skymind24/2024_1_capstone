@@ -33,6 +33,3 @@ The study focuses on developing a cluster tracking robot for logistics purposes,
 <br>
 
 
-이미지 백업  
-[우분투에서 microSD 카드 이미지 백업 방법](https://kyubot.tistory.com/132)
-
