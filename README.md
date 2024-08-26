@@ -24,9 +24,9 @@ The study focuses on developing a cluster tracking robot for logistics purposes,
 ## :pushpin: Team
 <div align="center">
 
-| [<img src="https://github.com/Skymind24.png" height=150 width=150>](https://github.com/Skymind24) |  |
+| [<img src="https://github.com/Skymind24.png" height=150 width=150>](https://github.com/Skymind24) | [<img src="https://github.com/NYJi.png" height=150 width=150>](https://github.com/NYJi) |
 | :------: |  :------: |
-| [@Skymind24](https://github.com/Skymind24) |  |
+| [@Skymind24](https://github.com/Skymind24) | [@NYJi](https://github.com/NYJi) |
 
 </div>
 
