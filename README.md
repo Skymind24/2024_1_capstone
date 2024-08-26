@@ -30,6 +30,7 @@ The study focuses on developing a cluster tracking robot for logistics purposes,
 
 </div>
 
+Thanks
 <br>
 
 
